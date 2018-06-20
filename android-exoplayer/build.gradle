@@ -11,10 +11,12 @@ android {
 }
 
 dependencies {
-    provided 'com.facebook.react:react-native:+'
+    provided 'com.facebook.react:react-native:0.52.0.1'
     compile 'com.google.android.exoplayer:exoplayer:2.7.3'
     compile('com.google.android.exoplayer:extension-okhttp:2.7.3') {
         exclude group: 'com.squareup.okhttp3', module: 'okhttp'
     }
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
 }
+
+apply from: 'release.gradle'

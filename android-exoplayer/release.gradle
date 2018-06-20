@@ -1,0 +1,80 @@
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+// Gradle tasks for publishing to maven
+// 1) To install in local maven repo use :installArchives task
+// 2) To upload artifact to maven central use: :uploadArchives (you'd need to have the permission to do that)
+
+def getRepositoryUrl() {
+    return GLOW_MAVEN
+}
+
+def getRepositoryUsername() {
+    return USERNAME
+}
+
+def getRepositoryPassword() {
+    return PASSWORD
+}
+
+def configurePom(def pom) {
+    pom.project {
+        name 'ReactNativeVideo'
+        artifactId 'react-native-video'
+        packaging 'aar'
+        description 'A <Video /> component for react-native'
+        url 'https://github.com/react-native-community/react-native-video'
+
+        licenses {
+            license {
+                name 'MIT License'
+                url 'https://github.com/react-native-community/react-native-videp/blob/master/LICENSE'
+                distribution 'repo'
+            }
+        }
+    }
+}
+
+afterEvaluate { project ->
+    android.libraryVariants.all { variant ->
+        def name = variant.name.capitalize()
+        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
+            from variant.javaCompile.destinationDir
+        }
+    }
+
+    version = '2.1.1'
+    group = 'com.brentvatne'
+
+    signing {
+        required { gradle.taskGraph.hasTask('uploadArchives') }
+        sign configurations.archives
+    }
+
+    uploadArchives {
+        configuration = configurations.archives
+        repositories.mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
+
+            repository(url: getRepositoryUrl()) {
+                authentication(
+                        userName: getRepositoryUsername(),
+                        password: getRepositoryPassword())
+
+            }
+
+            configurePom pom
+        }
+    }
+
+    task installArchives(type: Upload) {
+        configuration = configurations.archives
+        repositories.mavenDeployer {
+            repository url: repositories.mavenLocal().url
+
+            configurePom pom
+        }
+    }
+}
